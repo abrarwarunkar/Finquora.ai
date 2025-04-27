@@ -19,7 +19,7 @@ import os
 
 # At the top of your file, add:
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-LOGO_PATH = os.path.join(CURRENT_DIR, "static", "images", "quantivue_logo.png")
+LOGO_PATH = os.path.join(CURRENT_DIR, "static", "images", "finquora_logo.png")
 
 BRAND_CONFIG = {
     "name": "FinquoraAI",
