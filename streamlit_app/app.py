@@ -46,12 +46,34 @@ BRAND_CONFIG = {
 # ==============================================
 # Update page configuration
 # Page configuration
+# Keep the first st.set_page_config() at the top and remove the duplicate one at the bottom
 st.set_page_config(
     page_title=f"{BRAND_CONFIG['name']} | {BRAND_CONFIG['tagline']}",
     layout="wide",
     initial_sidebar_state="expanded",
-    page_icon=BRAND_CONFIG['logo']
+    page_icon=BRAND_CONFIG['logo'],
+    menu_items={
+        'Get Help': 'https://github.com/abrarwarunkar/FinquoraAI',
+        'Report a bug': "https://github.com/abrarwarunkar/FinquoraAI/issues",
+        'About': """
+        # FinquoraAI
+        Smart Financial Insights for Every Step
+        
+        An advanced financial analysis and prediction platform powered by artificial intelligence.
+        """
+    }
 )
+
+# Add OpenGraph metadata right after the page config
+st.markdown("""
+    <head>
+        <title>FinquoraAI - Smart Financial Insights</title>
+        <meta name="description" content="Advanced Financial Analysis & Prediction Platform" />
+        <meta property="og:title" content="FinquoraAI" />
+        <meta property="og:description" content="Advanced Financial Analysis & Prediction Platform" />
+        <meta property="og:url" content="https://finquora-ai.streamlit.app/" />
+    </head>
+""", unsafe_allow_html=True)
 
 # Initialize session state variables
 if 'portfolio' not in st.session_state:
@@ -231,6 +253,25 @@ if __name__ == "__main__":
     from utils.visualization import get_fullscreen_js
     html(get_fullscreen_js())
     main()
+
+
+# Remove the duplicate st.set_page_config() from the bottom of the file
+st.set_page_config(
+    page_title="FinquoraAI - Smart Financial Insights",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/abrarwarunkar/FinquoraAI',
+        'Report a bug': "https://github.com/abrarwarunkar/FinquoraAI/issues",
+        'About': """
+        # FinquoraAI
+        Smart Financial Insights for Every Step
+        
+        An advanced financial analysis and prediction platform powered by artificial intelligence.
+        """
+    }
+)
 
 
     
