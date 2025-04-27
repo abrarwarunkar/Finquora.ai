@@ -12,6 +12,10 @@ from utils.ml_utils import calculate_rsi, train_model, predict_future
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 def render_stock_analysis(ticker):
+    # Add app name and tagline at the top
+    st.title("Finquora")
+    st.caption("Smart Financial Insights for Every Step")
+    
     st.subheader("📈 Technical Indicators")
     
     stock = yf.Ticker(ticker)

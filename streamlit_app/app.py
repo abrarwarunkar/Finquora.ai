@@ -22,7 +22,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOGO_PATH = os.path.join(CURRENT_DIR, "static", "images", "quantivue_logo.png")
 
 BRAND_CONFIG = {
-    "name": "QuantivueAI",
+    "name": "FinquoraAI",
     "tagline": "Advanced Financial Analysis & Prediction Platform",
     "logo": LOGO_PATH,  # Using the constructed path
     "colors": {

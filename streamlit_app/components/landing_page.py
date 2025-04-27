@@ -5,7 +5,7 @@ def render_landing_page():
     st.markdown("""
     <div class="hero-section">
         <h1 style='font-size: 3.5rem; font-weight: 700; margin-bottom: 1rem;'>
-            Welcome to QuantivueAI
+            Welcome to FinquoraAI
         </h1>
         <p style='font-size: 1.5rem; color: #666; margin-bottom: 2rem;'>
             Your Advanced Financial Analysis & Prediction Platform
@@ -52,7 +52,7 @@ def render_landing_page():
     
     # Key Benefits
     st.markdown("---")
-    st.markdown("## Why Choose QuantivueAI?")
+    st.markdown("## Why Choose FinquoraAI?")
     
     metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
     
