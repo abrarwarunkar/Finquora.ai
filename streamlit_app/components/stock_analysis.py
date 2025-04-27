@@ -212,13 +212,13 @@ def render_stock_prediction(ticker):
                         fig_future = go.Figure()
                         fig_future.add_trace(go.Scatter(x=df['Close'].index[-30:], y=df['Close'].values[-30:],
                                                       name='Historical', line=dict(color='blue', width=2)))
-                        fig_future.add_trace(go.Scatter(x=future_pred.index, y=future_pred.values,
+                        fig_future.add_trace(go.Scatter(x=predictions.index, y=predictions.values,
                                                       name='Predictions', line=dict(color='green', width=2)))
                         
                         # Add confidence interval
                         fig_future.add_trace(go.Scatter(
-                            x=future_pred.index.tolist() + future_pred.index.tolist()[::-1],
-                            y=(future_pred.values * 1.05).tolist() + (future_pred.values * 0.95).tolist()[::-1],
+                            x=predictions.index.tolist() + predictions.index.tolist()[::-1],
+                            y=(predictions.values * 1.05).tolist() + (predictions.values * 0.95).tolist()[::-1],
                             fill='toself',
                             fillcolor='rgba(0,128,0,0.1)',
                             line=dict(color='rgba(255,255,255,0)'),
