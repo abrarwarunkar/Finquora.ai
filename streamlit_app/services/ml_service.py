@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
@@ -16,30 +15,26 @@ def predict_stock_price(ticker, days=7):
         days (int): Number of days to predict
         
     Returns:
-        pandas.Series: Predicted prices
+        pandas.Series: Predicted prices with datetime index
     """
     try:
-        # Fetch more data to ensure enough samples for rolling features
+        # Fetch historical data
         stock = yf.Ticker(ticker)
-        df = stock.history(period="max")  # Get maximum available history
+        df = stock.history(period="max")
         
-        print(f"Initial data shape for {ticker}: {df.shape}")
-        
-        if len(df) < 100:  # Increased minimum requirement
-            print(f"Not enough historical data for {ticker}. Found only {len(df)} days, need at least 100.")
+        if len(df) < 100:
+            print(f"Not enough historical data for {ticker}. Found only {len(df)} days.")
             return pd.Series([], name="Prediction")
         
-        # Handle missing values in all columns
+        # Handle missing values
         for column in df.columns:
             if df[column].isna().any():
                 if column == 'Volume':
-                    # Fill Volume with median to avoid skewing the data
                     df[column] = df[column].fillna(df[column].median())
                 else:
-                    # For price columns, use forward fill then backward fill
                     df[column] = df[column].fillna(method='ffill').fillna(method='bfill')
         
-        # Feature engineering with more robust error handling
+        # Feature engineering
         try:
             df['MA7'] = df['Close'].rolling(window=7).mean()
             df['MA21'] = df['Close'].rolling(window=21).mean()
@@ -49,32 +44,28 @@ def predict_stock_price(ticker, days=7):
             print(f"Error during feature engineering: {e}")
             return pd.Series([], name="Prediction")
         
-        # Remove NaN values
         df_clean = df.dropna().copy()
         
-        print(f"Data shape after cleaning for {ticker}: {df_clean.shape}")
-        
-        # Ensure we have enough data after cleaning
         if len(df_clean) < 30:
-            print(f"Not enough clean data for {ticker}. Found only {len(df_clean)} samples after preprocessing.")
+            print(f"Not enough clean data for {ticker}.")
             return pd.Series([], name="Prediction")
         
-        # Use only the most recent data for training
+        # Use recent data for better predictions
         if len(df_clean) > 1000:
             df_clean = df_clean.tail(1000)
-            print(f"Using the most recent 1000 data points for training.")
         
-        # Split features and target
+        # Prepare features
         X = df_clean[['Open', 'High', 'Low', 'Close', 'Volume', 'MA7', 'MA21', 'RSI']]
         y = df_clean['Target']
         
-        # Train model
+        # Train and predict
         model, scaler = train_model(X, y)
-        
-        # Predict future prices
+        future_dates = pd.date_range(start=df.index[-1], periods=days+1)[1:]
         future_pred = predict_future(model, scaler, X, days)
+        future_pred.index = future_dates
         
         return future_pred
+
     except Exception as e:
         import traceback
         print(f"Error predicting stock price: {e}")
