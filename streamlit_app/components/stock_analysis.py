@@ -11,11 +11,16 @@ except ImportError:
 
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from datetime import datetime
 from services.stock_service import get_stock_data
 from services.ml_service import predict_stock_price
 from utils.ml_utils import calculate_rsi, train_model, predict_future
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from threading import Lock
+
+# Global matplotlib lock
+matplotlib_lock = Lock()
 
 def render_stock_analysis(ticker):
     st.subheader("📈 Technical Indicators")
@@ -199,19 +204,22 @@ def render_stock_prediction(ticker):
                         'Predicted': predictions
                     })
                     
-                    # First chart (Actual vs Predicted)
+                    # Replace matplotlib visualizations with Plotly
                     fig = go.Figure()
+                    
+                    # Plot actual vs predicted
                     fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Actual'],
                                             name='Actual', line=dict(color='blue', width=2)))
                     fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Predicted'],
                                             name='Predicted', line=dict(color='red', width=2, dash='dash')))
                     
                     fig.update_layout(
-                        title='Stock Price Prediction vs Actual',
+                        title='Model Performance',
                         xaxis_title='Date',
                         yaxis_title='Price ($)',
                         hovermode='x unified'
                     )
+                    
                     st.plotly_chart(fig, use_container_width=True)
                 
                     # Future predictions plot using the same predictions
