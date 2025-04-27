@@ -1,9 +1,16 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
+# Import matplotlib only when needed
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # Set backend to Agg
+    import matplotlib.pyplot as plt
+except ImportError:
+    st.error("Error loading matplotlib. Using alternative visualization.")
+
 import numpy as np
-import plotly.graph_objects as go  # Add this import
+import plotly.graph_objects as go
 from datetime import datetime
 from services.stock_service import get_stock_data
 from services.ml_service import predict_stock_price

@@ -1,1 +1,6 @@
 python3-dev
+build-essential
+pkg-config
+python3-tk
+python3-matplotlib
+libfreetype6-dev
