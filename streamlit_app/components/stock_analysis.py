@@ -178,54 +178,67 @@ def render_corporate_calendar(ticker):
 def render_stock_prediction(ticker):
     st.subheader(f"🔮 Price Prediction for {ticker}")
     
+    # Load data first
+    stock = yf.Ticker(ticker)
+    df = stock.history(period="3mo", interval="1d").copy()
+    
     days = st.slider("Prediction Days", min_value=1, max_value=30, value=7)
     
     if st.button("Generate Prediction"):
         with st.spinner("Generating prediction..."):
             try:
-                from services.ml_service import predict_stock_price
-                predictions = predict_stock_price(ticker, days)
+                predictions = predict_stock_price(ticker, days)  # Remove tuple unpacking
                 
                 if len(predictions) == 0:
                     st.warning("Unable to generate prediction. Not enough historical data available for this stock.")
                     st.info("Try a more established stock with longer trading history.")
                 else:
-                    # Display prediction chart
-                    import plotly.graph_objects as go
+                    # Create results dataframe
+                    results_df = pd.DataFrame({
+                        'Actual': df['Close'][-len(predictions):],
+                        'Predicted': predictions
+                    })
+                    
+                    # First chart (Actual vs Predicted)
                     fig = go.Figure()
-                    
-                    # Get historical data for context
-                    stock = yf.Ticker(ticker)
-                    hist = stock.history(period="3mo")
-                    
-                    # Add historical prices
-                    fig.add_trace(go.Scatter(
-                        x=hist.index,
-                        y=hist['Close'],
-                        mode='lines',
-                        name='Historical',
-                        line=dict(color='blue')
-                    ))
-                    
-                    # Add predictions
-                    fig.add_trace(go.Scatter(
-                        x=predictions.index,
-                        y=predictions,
-                        mode='lines+markers',
-                        name='Prediction',
-                        line=dict(color='red', dash='dot'),
-                        marker=dict(size=8)
-                    ))
+                    fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Actual'],
+                                            name='Actual', line=dict(color='blue', width=2)))
+                    fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Predicted'],
+                                            name='Predicted', line=dict(color='red', width=2, dash='dash')))
                     
                     fig.update_layout(
-                        title=f"{ticker} Price Prediction (Next {days} Days)",
-                        xaxis_title="Date",
-                        yaxis_title="Price (USD)",
-                        legend_title="Data Type",
-                        hovermode="x unified"
+                        title='Stock Price Prediction vs Actual',
+                        xaxis_title='Date',
+                        yaxis_title='Price ($)',
+                        hovermode='x unified'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                    # Future predictions plot using the same predictions
+                    fig_future = go.Figure()
+                    fig_future.add_trace(go.Scatter(x=df.index[-30:], y=df['Close'].values[-30:],
+                                       name='Historical', line=dict(color='blue', width=2)))
+                    fig_future.add_trace(go.Scatter(x=predictions.index, y=predictions.values,
+                                       name='Predictions', line=dict(color='green', width=2)))
+                    
+                    # Add confidence interval
+                    fig_future.add_trace(go.Scatter(
+                        x=predictions.index.tolist() + predictions.index.tolist()[::-1],
+                        y=(predictions.values * 1.05).tolist() + (predictions.values * 0.95).tolist()[::-1],
+                        fill='toself',
+                        fillcolor='rgba(0,128,0,0.1)',
+                        line=dict(color='rgba(255,255,255,0)'),
+                        name='Confidence Interval'
+                    ))
+                    
+                    fig_future.update_layout(
+                        title='Price Forecast',
+                        xaxis_title='Date',
+                        yaxis_title='Price ($)',
+                        hovermode='x unified'
                     )
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig_future, use_container_width=True)
                     
                     # Display prediction table
                     st.subheader("Predicted Prices")
