@@ -42,19 +42,16 @@ BRAND_CONFIG = {
 }
 
 # ==============================================
-# PAGE CONFIGURATION - MOVED HERE AS FIRST STREAMLIT COMMAND
+# PAGE CONFIGURATION
 # ==============================================
-# Update page configuration
-# Page configuration
-# Keep the first st.set_page_config() at the top and remove the duplicate one at the bottom
 st.set_page_config(
     page_title=f"{BRAND_CONFIG['name']} | {BRAND_CONFIG['tagline']}",
     layout="wide",
     initial_sidebar_state="expanded",
     page_icon=BRAND_CONFIG['logo'],
     menu_items={
-        'Get Help': 'https://github.com/abrarwarunkar/FinquoraAI',
-        'Report a bug': "https://github.com/abrarwarunkar/FinquoraAI/issues",
+        'Get Help': 'https://github.com/abrarwarunkar/Finquora.ai',
+        'Report a bug': "https://github.com/abrarwarunkar/Finquora.ai/issues",
         'About': """
         # FinquoraAI
         Smart Financial Insights for Every Step
@@ -255,7 +252,7 @@ if __name__ == "__main__":
     main()
 
 
-# Remove the duplicate st.set_page_config() from the bottom of the file
+# Remove the duplicate st.set_page_config() at the bottom of the file
 st.set_page_config(
     page_title="FinquoraAI - Smart Financial Insights",
     page_icon="📈",
