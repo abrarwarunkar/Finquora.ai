@@ -1,14 +1,7 @@
+# Remove matplotlib imports and lock
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-# Import matplotlib only when needed
-try:
-    import matplotlib
-    matplotlib.use('Agg')  # Set backend to Agg
-    import matplotlib.pyplot as plt
-except ImportError:
-    st.error("Error loading matplotlib. Using alternative visualization.")
-
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -17,10 +10,6 @@ from services.stock_service import get_stock_data
 from services.ml_service import predict_stock_price
 from utils.ml_utils import calculate_rsi, train_model, predict_future
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from threading import Lock
-
-# Global matplotlib lock
-matplotlib_lock = Lock()
 
 def render_stock_analysis(ticker):
     st.subheader("📈 Technical Indicators")
@@ -42,46 +31,43 @@ def render_stock_analysis(ticker):
     macd = ema12 - ema26
     signal = macd.ewm(span=9, adjust=False).mean()
     
-    # Get moving average from dashboard
-    ma_window = 14  # Default value
+    ma_window = 14
     hist['MA'] = hist['Close'].rolling(window=ma_window).mean()
     
-    # Technical analysis chart
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
-    
+    # Create technical analysis chart using Plotly
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True,
+                       vertical_spacing=0.05,
+                       subplot_titles=('Price & MA', 'RSI', 'MACD'))
+
     # Price and MA plot
-    ax1.plot(hist.index, hist['Close'], label='Price', color='#2962ff', linewidth=2)
-    ax1.plot(hist.index, hist['MA'], label=f'{ma_window}-Day MA', 
-            color='#00e676', linestyle='--', linewidth=1.5)
-    ax1.set_ylabel('Price', color='#757575')
-    ax1.tick_params(axis='y', colors='#757575')
-    ax1.grid(True, color='#e1e4e8', linestyle='--', alpha=0.7)
-    ax1.legend(facecolor='white', framealpha=1)
-    
+    fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'],
+                            name='Price', line=dict(color='#2962ff', width=2)), row=1, col=1)
+    fig.add_trace(go.Scatter(x=hist.index, y=hist['MA'],
+                            name=f'{ma_window}-Day MA', line=dict(color='#00e676', dash='dash')), row=1, col=1)
+
     # RSI plot
-    ax2.plot(rsi.index, rsi, label='RSI (14)', color='#2962ff', linewidth=2)
-    ax2.axhline(70, color='red', linestyle='--', linewidth=1, alpha=0.7)
-    ax2.axhline(30, color='green', linestyle='--', linewidth=1, alpha=0.7)
-    ax2.fill_between(rsi.index, 30, 70, color='#f0f0f0', alpha=0.3)
-    ax2.set_ylabel('RSI', color='#757575')
-    ax2.tick_params(axis='y', colors='#757575')
-    ax2.grid(True, color='#e1e4e8', linestyle='--', alpha=0.7)
-    ax2.set_ylim(0, 100)
-    
+    fig.add_trace(go.Scatter(x=rsi.index, y=rsi,
+                            name='RSI', line=dict(color='#2962ff')), row=2, col=1)
+    fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
+    fig.add_hline(y=30, line_dash="dash", line_color="green", row=2, col=1)
+
     # MACD plot
-    ax3.plot(macd.index, macd, label='MACD', color='#2962ff', linewidth=2)
-    ax3.plot(signal.index, signal, label='Signal', color='#00e676', linewidth=1.5)
-    ax3.bar(macd.index, macd - signal, 
-           color=['green' if val > 0 else 'red' for val in (macd - signal)], 
-           alpha=0.3, width=0.7)
-    ax3.set_ylabel('MACD', color='#757575')
-    ax3.tick_params(axis='y', colors='#757575')
-    ax3.grid(True, color='#e1e4e8', linestyle='--', alpha=0.7)
-    ax3.legend(facecolor='white', framealpha=1)
+    fig.add_trace(go.Scatter(x=macd.index, y=macd,
+                            name='MACD', line=dict(color='#2962ff')), row=3, col=1)
+    fig.add_trace(go.Scatter(x=signal.index, y=signal,
+                            name='Signal', line=dict(color='#00e676')), row=3, col=1)
     
-    plt.tight_layout()
-    st.pyplot(fig)
+    # MACD histogram
+    colors = ['green' if val > 0 else 'red' for val in (macd - signal)]
+    fig.add_trace(go.Bar(x=macd.index, y=macd-signal,
+                        name='MACD Histogram',
+                        marker_color=colors), row=3, col=1)
+
+    fig.update_layout(height=800, showlegend=True,
+                     title_text="Technical Analysis")
     
+    st.plotly_chart(fig, use_container_width=True)
+
     # Indicator interpretation
     col1, col2 = st.columns(2)
     with col1:
@@ -204,49 +190,49 @@ def render_stock_prediction(ticker):
                         'Predicted': predictions
                     })
                     
-                    # Replace matplotlib visualizations with Plotly
-                    fig = go.Figure()
-                    
-                    # Plot actual vs predicted
-                    fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Actual'],
-                                            name='Actual', line=dict(color='blue', width=2)))
-                    fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Predicted'],
-                                            name='Predicted', line=dict(color='red', width=2, dash='dash')))
-                    
-                    fig.update_layout(
-                        title='Model Performance',
-                        xaxis_title='Date',
-                        yaxis_title='Price ($)',
-                        hovermode='x unified'
-                    )
-                    
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                    # Future predictions plot using the same predictions
-                    fig_future = go.Figure()
-                    fig_future.add_trace(go.Scatter(x=df.index[-30:], y=df['Close'].values[-30:],
-                                       name='Historical', line=dict(color='blue', width=2)))
-                    fig_future.add_trace(go.Scatter(x=predictions.index, y=predictions.values,
-                                       name='Predictions', line=dict(color='green', width=2)))
-                    
-                    # Add confidence interval
-                    fig_future.add_trace(go.Scatter(
-                        x=predictions.index.tolist() + predictions.index.tolist()[::-1],
-                        y=(predictions.values * 1.05).tolist() + (predictions.values * 0.95).tolist()[::-1],
-                        fill='toself',
-                        fillcolor='rgba(0,128,0,0.1)',
-                        line=dict(color='rgba(255,255,255,0)'),
-                        name='Confidence Interval'
-                    ))
-                    
-                    fig_future.update_layout(
-                        title='Price Forecast',
-                        xaxis_title='Date',
-                        yaxis_title='Price ($)',
-                        hovermode='x unified'
-                    )
-                    
-                    st.plotly_chart(fig_future, use_container_width=True)
+                    # Replace matplotlib plots with Plotly in the prediction section
+                    if len(df) > 10:
+                        # Plot actual vs predicted
+                        fig = go.Figure()
+                        fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Actual'],
+                                               name='Actual', line=dict(color='blue', width=2)))
+                        fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Predicted'],
+                                               name='Predicted', line=dict(color='red', width=2, dash='dash')))
+                        
+                        fig.update_layout(
+                            title='Stock Price Prediction vs Actual',
+                            xaxis_title='Date',
+                            yaxis_title='Price ($)',
+                            hovermode='x unified'
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Future predictions plot
+                        fig_future = go.Figure()
+                        fig_future.add_trace(go.Scatter(x=df['Close'].index[-30:], y=df['Close'].values[-30:],
+                                                      name='Historical', line=dict(color='blue', width=2)))
+                        fig_future.add_trace(go.Scatter(x=future_pred.index, y=future_pred.values,
+                                                      name='Predictions', line=dict(color='green', width=2)))
+                        
+                        # Add confidence interval
+                        fig_future.add_trace(go.Scatter(
+                            x=future_pred.index.tolist() + future_pred.index.tolist()[::-1],
+                            y=(future_pred.values * 1.05).tolist() + (future_pred.values * 0.95).tolist()[::-1],
+                            fill='toself',
+                            fillcolor='rgba(0,128,0,0.1)',
+                            line=dict(color='rgba(255,255,255,0)'),
+                            name='Confidence Interval'
+                        ))
+                        
+                        fig_future.update_layout(
+                            title='Price Forecast',
+                            xaxis_title='Date',
+                            yaxis_title='Price ($)',
+                            hovermode='x unified'
+                        )
+                        
+                        st.plotly_chart(fig_future, use_container_width=True)
                     
                     # Display prediction table
                     st.subheader("Predicted Prices")
