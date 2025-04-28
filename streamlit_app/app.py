@@ -1,12 +1,8 @@
-import streamlit as st
-from dotenv import load_dotenv
+# First, import only non-streamlit modules
 import os
-from components.dashboard import render_dashboard
-from components.stock_analysis import render_stock_analysis
-from services.gemini_service import run_financial_agent
-from components.landing_page import render_landing_page
+from dotenv import load_dotenv
 
-# Define BRAND_CONFIG first
+# Set up configuration before any Streamlit imports
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOGO_PATH = os.path.join(CURRENT_DIR, "static", "images", "finquora_logo.png")
 
@@ -30,6 +26,9 @@ BRAND_CONFIG = {
     }
 }
 
+# Now import streamlit and set page config
+import streamlit as st
+
 # First Streamlit command
 st.set_page_config(
     page_title=f"{BRAND_CONFIG['name']} | {BRAND_CONFIG['tagline']}",
@@ -48,7 +47,11 @@ st.set_page_config(
     }
 )
 
-# Remove the second st.set_page_config() that appears later in the file
+# Import other components after page config
+from components.dashboard import render_dashboard
+from components.stock_analysis import render_stock_analysis
+from services.gemini_service import run_financial_agent
+from components.landing_page import render_landing_page
 
 # Add OpenGraph metadata right after the page config
 st.markdown("""
