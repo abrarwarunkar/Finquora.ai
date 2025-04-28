@@ -6,6 +6,23 @@ from components.stock_analysis import render_stock_analysis
 from services.gemini_service import run_financial_agent
 from components.landing_page import render_landing_page
 
+# First Streamlit command must be set_page_config
+st.set_page_config(
+    page_title=f"FinquoraAI | Advanced Financial Analysis & Prediction Platform",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    page_icon="📈",
+    menu_items={
+        'Get Help': 'https://github.com/abrarwarunkar/Finquora.ai',
+        'Report a bug': "https://github.com/abrarwarunkar/Finquora.ai/issues",
+        'About': """
+        # FinquoraAI
+        Smart Financial Insights for Every Step
+        
+        An advanced financial analysis and prediction platform powered by artificial intelligence.
+        """
+    }
+)
 
 # Import after environment variables are set
 # Update this line in your app.py
@@ -250,25 +267,6 @@ if __name__ == "__main__":
     from utils.visualization import get_fullscreen_js
     html(get_fullscreen_js())
     main()
-
-
-# Remove the duplicate st.set_page_config() at the bottom of the file
-st.set_page_config(
-    page_title="FinquoraAI - Smart Financial Insights",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://github.com/abrarwarunkar/FinquoraAI',
-        'Report a bug': "https://github.com/abrarwarunkar/FinquoraAI/issues",
-        'About': """
-        # FinquoraAI
-        Smart Financial Insights for Every Step
-        
-        An advanced financial analysis and prediction platform powered by artificial intelligence.
-        """
-    }
-)
 
 
     
