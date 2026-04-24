@@ -1,6 +1,2 @@
-python3-dev
-build-essential
-pkg-config
-python3-tk
-python3-matplotlib
-libfreetype6-dev
+# System dependencies are managed by Streamlit Cloud's base image.
+# No additional apt packages required at this time.
