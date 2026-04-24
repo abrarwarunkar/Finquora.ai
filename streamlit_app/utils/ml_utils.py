@@ -110,3 +110,48 @@ def predict_future(model, scaler, X, days=7):
     except Exception as e:
         print(f"Error in predict_future: {e}")
         return pd.Series([], name="Prediction")
+
+def detect_anomalies(df):
+    """
+    Detect anomalies in stock data using Isolation Forest
+    
+    Args:
+        df (pandas.DataFrame): Stock history dataframe
+        
+    Returns:
+        pandas.DataFrame: DataFrame with an 'Anomaly' column (-1 for anomaly, 1 for normal)
+    """
+    from sklearn.ensemble import IsolationForest
+    try:
+        # We need enough data
+        if len(df) < 30:
+            return df
+            
+        features = ['Close', 'Volume']
+        
+        # Calculate daily returns to use as a feature
+        df_analysis = df.copy()
+        df_analysis['Returns'] = df_analysis['Close'].pct_change()
+        df_analysis.dropna(inplace=True)
+        
+        # Use returns and volume for anomaly detection
+        X = df_analysis[['Returns', 'Volume']].values
+        
+        # Scale features manually or just pass to IsolationForest
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        
+        # Fit model
+        # contamination sets the expected proportion of outliers (e.g. 5%)
+        model = IsolationForest(contamination=0.05, random_state=42)
+        df_analysis['Anomaly'] = model.fit_predict(X_scaled)
+        
+        # Rejoin with original df
+        df['Anomaly'] = 1 # default to normal
+        df.loc[df_analysis.index, 'Anomaly'] = df_analysis['Anomaly']
+        
+        return df
+    except Exception as e:
+        print(f"Error detecting anomalies: {e}")
+        df['Anomaly'] = 1
+        return df

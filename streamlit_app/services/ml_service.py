@@ -32,7 +32,7 @@ def predict_stock_price(ticker, days=7):
                 if column == 'Volume':
                     df[column] = df[column].fillna(df[column].median())
                 else:
-                    df[column] = df[column].fillna(method='ffill').fillna(method='bfill')
+                    df[column] = df[column].ffill().bfill()
         
         # Feature engineering
         try:
@@ -71,21 +71,4 @@ def predict_stock_price(ticker, days=7):
         print(f"Error predicting stock price: {e}")
         print(traceback.format_exc())
         return pd.Series([], name="Prediction")
-
-def run_financial_agent(prompt):
-    """
-    Run the financial agent with the given prompt
-    
-    Args:
-        prompt (str): User prompt
-        
-    Returns:
-        str: Agent response
-    """
-    try:
-        from financial_agent import run
-        response = run(prompt)
-        return response
-    except Exception as e:
-        print(f"Error running financial agent: {e}")
-        return f"I'm sorry, I couldn't process your request: {str(e)}"
+

@@ -7,7 +7,7 @@ from services.stock_service import get_stock_data
 
 def render_dashboard(ticker):
     stock = yf.Ticker(ticker)
-    hist = stock.history(period="1mo", interval="1d")
+    hist = stock.history(period="1y", interval="1d")
     if hist.empty:
         st.error(f"No data available for {ticker}")
         return
@@ -23,11 +23,23 @@ def render_dashboard(ticker):
     )
     hist['MA'] = hist['Close'].rolling(window=ma_window).mean()
     
-    # Enhanced chart
-    st.line_chart(hist[['Close', 'MA']].rename(columns={
-        'Close': 'Price',
-        'MA': f'{ma_window}-Day MA'
-    }), use_container_width=True)
+    # Enhanced chart using Plotly
+    import plotly.graph_objects as go
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#2962ff', width=2)))
+    # Only add MA if there are valid values to avoid warning
+    if not hist['MA'].isna().all():
+        fig.add_trace(go.Scatter(x=hist.index, y=hist['MA'], name=f'{ma_window}-Day MA', line=dict(color='#00e676', dash='dash')))
+    
+    fig.update_layout(
+        title=f"{ticker} Price & {ma_window}-Day Moving Average",
+        xaxis_title="Date",
+        yaxis_title="Price ($)",
+        hovermode="x unified",
+        height=400,
+        margin=dict(l=0, r=0, t=40, b=0)
+    )
+    st.plotly_chart(fig, use_container_width=True)
     
     # Calculate percentage change
     change = hist['Close'][-1] - hist['Close'][-2]

@@ -49,8 +49,8 @@ st.set_page_config(
 
 # Import other components after page config
 from components.dashboard import render_dashboard
-from components.stock_analysis import render_stock_analysis
-from services.gemini_service import run_financial_agent
+
+from services.groq_service import run_financial_agent
 from components.landing_page import render_landing_page
 
 # Add OpenGraph metadata right after the page config
@@ -99,84 +99,11 @@ def main():
 
     # Ticker Input
     ticker = st.sidebar.text_input(
-        "Enter stock or crypto symbol", 
+        "🔍 Search Ticker (e.g. AAPL)", 
         key="ticker_input",
-        placeholder="e.g., AAPL, MSFT, BTC-USD",
+        placeholder="AAPL, NVDA, BTC-USD...",
         help="Enter a valid stock ticker or cryptocurrency symbol"
     )
-    
-    # Market Overview
-    st.sidebar.subheader("🌎 Market Overview")
-    from services.stock_service import get_market_indices
-    get_market_indices()
-    
-    # Portfolio Management Section
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("📊 Portfolio Management")
-    if ticker:
-        if st.sidebar.button("Add to Portfolio", key="add_portfolio_btn"):
-            quantity = st.sidebar.number_input("Quantity", min_value=1, value=1, key="qty_input")
-            entry_price = st.sidebar.number_input("Entry Price ($)", min_value=0.01, value=100.00, key="price_input")
-            st.session_state.portfolio[ticker] = {
-                "quantity": quantity,
-                "entry_price": entry_price
-            }
-            st.sidebar.success(f"Added {ticker} to portfolio!")
-
-    # Display Portfolio Summary
-    if st.session_state.portfolio:
-        for symbol, details in st.session_state.portfolio.items():
-            st.sidebar.markdown(f"""
-            **{symbol}**
-            - Quantity: {details['quantity']}
-            - Entry: ${details['entry_price']:.2f}
-            """)
-            if st.sidebar.button(f"Remove", key=f"remove_portfolio_{symbol}"):
-                del st.session_state.portfolio[symbol]
-                st.rerun()
-
-    # Watchlist Section
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("👀 Watchlist")
-    if ticker:
-        if st.sidebar.button("Add to Watchlist", key="add_watchlist_btn"):
-            st.session_state.watchlist.add(ticker)
-            st.sidebar.success(f"Added {ticker} to watchlist!")
-
-    # Display Watchlist
-    if st.session_state.watchlist:
-        for symbol in st.session_state.watchlist:
-            col1, col2 = st.sidebar.columns([3,1])
-            with col1:
-                st.markdown(f"• {symbol}")
-            with col2:
-                if st.sidebar.button("×", key=f"remove_watch_{symbol}"):
-                    st.session_state.watchlist.remove(symbol)
-                    st.rerun()
-
-    # Price Alerts Section
-    with st.sidebar.expander("🔔 Price Alerts", expanded=True):
-        if ticker:
-            alert_price = st.number_input("Alert Price ($)", min_value=0.01, value=100.00, key="alert_price_input")
-            alert_type = st.selectbox("Alert Type", ["Above", "Below"], key="alert_type_select")
-            
-            if st.button("Set Alert", key="set_alert_btn"):
-                st.session_state.price_alerts[ticker] = {
-                    "price": alert_price,
-                    "type": alert_type
-                }
-                st.success(f"Alert set for {ticker}!")
-        
-        if st.session_state.price_alerts:
-            st.markdown("### Active Alerts")
-            for symbol, alert in st.session_state.price_alerts.items():
-                st.markdown(f"""
-                **{symbol}** - {alert['type']} ${alert['price']:.2f}
-                """)
-                if st.button("Remove Alert", key=f"remove_alert_{symbol}"):
-                    del st.session_state.price_alerts[symbol]
-                    st.rerun()
-
     # ==============================================
     # MAIN CONTENT AREA
     # ==============================================
@@ -184,27 +111,34 @@ def main():
         render_landing_page()
     else:
         try:
-            # Create tabs
-            tab1, tab2, tab3, tab4 = st.tabs([
-                "📊 Market Snapshot", 
-                "📅 Corporate Calendar", 
-                "📈 Technical Analysis",
-                "🔮 Stock Prediction"
+            # Create AI/ML focused tabs
+            tab1, tab2, tab3, tab4, tab5 = st.tabs([
+                "🔮 ML Price Prediction", 
+                "🧠 AI Sentiment Analysis", 
+                "🔍 ML Anomaly Detection",
+                "🧮 Options Pricing",
+                "⚖️ Portfolio Optimization"
             ])
             
             with tab1:
-                render_dashboard(ticker)
-            
-            with tab2:
-                from components.stock_analysis import render_corporate_calendar
-                render_corporate_calendar(ticker)
-            
-            with tab3:
-                render_stock_analysis(ticker)
-            
-            with tab4:
                 from components.stock_analysis import render_stock_prediction
                 render_stock_prediction(ticker)
+            
+            with tab2:
+                from components.stock_analysis import render_ai_sentiment_analysis
+                render_ai_sentiment_analysis(ticker)
+            
+            with tab3:
+                from components.stock_analysis import render_ml_anomaly_detection
+                render_ml_anomaly_detection(ticker)
+                
+            with tab4:
+                from components.quant_analysis import render_options_pricing
+                render_options_pricing(ticker)
+                
+            with tab5:
+                from components.quant_analysis import render_portfolio_optimization
+                render_portfolio_optimization()
                 
         except Exception as e:
             st.error(f"Error analyzing {ticker}: {str(e)}")
@@ -237,12 +171,4 @@ def main():
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
 
-if __name__ == "__main__":
-    from streamlit.components.v1 import html
-    from utils.visualization import get_fullscreen_js
-    html(get_fullscreen_js())
-    main()
-
-
-    
-   
+main()
